@@ -30,19 +30,10 @@
 #define _FLASHER_H
 
 #include <string>
-#include <exception>
 
 #include "Device.h"
 #include "Flash.h"
 #include "Samba.h"
-#include "FileError.h"
-
-class FlashOffsetError : public std::exception
-{
-public:
-    FlashOffsetError() : std::exception() {};
-    virtual const char* what() const throw() { return "Flash offset is invalid"; }
-};
 
 class FlasherObserver
 {
@@ -60,8 +51,8 @@ public:
     Flasher(Samba& samba, Device& device, FlasherObserver& observer) : _samba(samba), _flash(device.getFlash()), _observer(observer) {}
     virtual ~Flasher() {}
 
-    void erase(uint32_t foffset);
-    void write(const char* filename, uint32_t foffset = 0);
+    bool erase(uint32_t foffset);
+    bool write(const char* filename, uint32_t foffset = 0);
 
 private:
     Samba& _samba;

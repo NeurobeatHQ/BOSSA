@@ -46,7 +46,8 @@ Samba::Samba() :
     _canChipErase(false),
     _canWriteBuffer(false),
     _canIdentifyChip(false),
-    _debug(false)
+    _debug(false),
+    _failed(false)
 {
 }
 
@@ -73,15 +74,9 @@ Samba::init()
     _port->write(cmd, 2);
     _port->read(cmd, 2);
 
-    std::string ver;
-    try
-    {
-        ver = version();
-    }
-    catch(SambaError& err)
-    {
+    std::string ver = version();
+    if (_failed)
         return false;
-    }
 
     std::size_t extIndex = ver.find("[Arduino:");
     if (extIndex != string::npos)
@@ -132,6 +127,9 @@ Samba::disconnect()
 void
 Samba::writeWord(uint32_t addr, uint32_t value)
 {
+    if (_failed)
+        return;
+
     uint8_t cmd[20];
 
     if (_debug)
@@ -139,7 +137,10 @@ Samba::writeWord(uint32_t addr, uint32_t value)
 
     snprintf((char*) cmd, sizeof(cmd), "W%08X,%08X#", addr, value);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
-        throw SambaError();
+    {
+        _failed = true;
+        return;
+    }
 
     // The SAM firmware has a bug that if the command and binary data
     // are received in the same USB data packet, then the firmware
@@ -159,7 +160,10 @@ Samba::writeBinary(const uint8_t* buffer, int size)
     {
         int written = _port->write(buffer, size);
         if (written <= 0)
-            throw SambaError();
+        {
+            _failed = true;
+            return;
+        }
         buffer += written;
         size -= written;
     }
@@ -169,6 +173,9 @@ Samba::writeBinary(const uint8_t* buffer, int size)
 void
 Samba::write(uint32_t addr, const uint8_t* buffer, int size)
 {
+    if (_failed)
+        return;
+
     uint8_t cmd[20];
 
     if (_debug)
@@ -176,7 +183,10 @@ Samba::write(uint32_t addr, const uint8_t* buffer, int size)
 
     snprintf((char*) cmd, sizeof(cmd), "S%08X,%08X#", addr, size);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
-        throw SambaError();
+    {
+        _failed = true;
+        return;
+    }
 
     // The SAM firmware has a bug that if the command and binary data
     // are received in the same USB data packet, then the firmware
@@ -200,7 +210,10 @@ Samba::readPrintable()
     size = _port->read(cmd, sizeof(cmd) - 1);
     _port->timeout(TIMEOUT_NORMAL);
     if (size <= 0)
-        throw SambaError();
+    {
+        _failed = true;
+        return std::string();
+    }
 
     str = (char*) cmd;
     for (pos = 0; pos < size; pos++)
@@ -216,6 +229,9 @@ Samba::readPrintable()
 std::string
 Samba::version()
 {
+    if (_failed)
+        return std::string();
+
     uint8_t cmd[2];
 
     cmd[0] = 'V';
@@ -233,6 +249,9 @@ Samba::version()
 std::string
 Samba::identifyChip()
 {
+    if (_failed)
+        return std::string();
+
     uint8_t cmd[2];
 
     cmd[0] = 'I';
@@ -250,8 +269,14 @@ Samba::identifyChip()
 void
 Samba::chipErase(uint32_t start_addr)
 {
+    if (_failed)
+        return;
+
     if (!_canChipErase)
-        throw SambaError();
+    {
+        _failed = true;
+        return;
+    }
 
     uint8_t cmd[64];
 
@@ -260,22 +285,28 @@ Samba::chipErase(uint32_t start_addr)
 
     int l = snprintf((char*) cmd, sizeof(cmd), "X%08X#", start_addr);
     if (_port->write(cmd, l) != l)
-        throw SambaError();
+    {
+        _failed = true;
+        return;
+    }
     _port->timeout(TIMEOUT_LONG);
     _port->read(cmd, 3); // Expects "X\n\r"
     _port->timeout(TIMEOUT_NORMAL);
     if (cmd[0] != 'X')
-        throw SambaError();
+        _failed = true;
 }
 
 void
 Samba::writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size)
 {
-    if (!_canWriteBuffer)
-        throw SambaError();
+    if (_failed)
+        return;
 
-    if (size > writeBufferSize())
-        throw SambaError();
+    if (!_canWriteBuffer || size > writeBufferSize())
+    {
+        _failed = true;
+        return;
+    }
 
     if (_debug)
         printf("%s(scr_addr=%#x, dst_addr=%#x, size=%#x)\n", __FUNCTION__, src_addr, dst_addr, size);
@@ -283,21 +314,30 @@ Samba::writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size)
     uint8_t cmd[64];
     int l = snprintf((char*) cmd, sizeof(cmd), "Y%08X,0#", src_addr);
     if (_port->write(cmd, l) != l)
-        throw SambaError();
+    {
+        _failed = true;
+        return;
+    }
     _port->timeout(TIMEOUT_NORMAL);
     cmd[0] = 0;
     _port->read(cmd, 3); // Expects "Y\n\r"
     _port->timeout(TIMEOUT_NORMAL);
     if (cmd[0] != 'Y')
-        throw SambaError();
+    {
+        _failed = true;
+        return;
+    }
 
     l = snprintf((char*) cmd, sizeof(cmd), "Y%08X,%08X#", dst_addr, size);
     if (_port->write(cmd, l) != l)
-        throw SambaError();
+    {
+        _failed = true;
+        return;
+    }
     _port->timeout(TIMEOUT_LONG);
     cmd[0] = 0;
     _port->read(cmd, 3); // Expects "Y\n\r"
     _port->timeout(TIMEOUT_NORMAL);
     if (cmd[0] != 'Y')
-        throw SambaError();
+        _failed = true;
 }

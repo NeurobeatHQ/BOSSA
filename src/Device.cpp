@@ -29,19 +29,26 @@
 #include "Device.h"
 #include "NullFlash.h"
 
-void
+bool
 Device::create()
 {
     // Only bootloaders with automatic chip identification are supported.
     // The SAM chip-ID probing and the SAM flash drivers live in unused/.
     if (!_samba.canIdentifyChip())
-        throw DeviceUnsupportedError();
+    {
+        _samba.fail();
+        return false;
+    }
 
     std::string id = _samba.identifyChip();
 
     if (id != "nRF52840-QIAA")
-        throw DeviceUnsupportedError();
+    {
+        _samba.fail();
+        return false;
+    }
 
     _family = FAMILY_NRF52;
     _flash = std::unique_ptr<Flash>(new NullFlash(_samba, "nRF52840-QIAA", 256, 4096, 0x00000000, 0x00000000));
+    return true;
 }

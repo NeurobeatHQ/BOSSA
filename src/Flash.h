@@ -31,18 +31,9 @@
 
 #include <stdint.h>
 #include <memory>
-#include <exception>
 
 #include "Samba.h"
 #include "WordCopyApplet.h"
-
-class FlashEraseError : public std::exception
-{
-public:
-    FlashEraseError() : exception() {};
-    const char* what() const throw() { return "Flash erase failed"; }
-
-};
 
 class Flash
 {

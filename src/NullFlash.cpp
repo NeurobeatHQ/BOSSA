@@ -43,7 +43,7 @@ NullFlash::eraseAll(uint32_t offset)
     if (_samba.canChipErase())
         _samba.chipErase(offset);
     else
-        throw FlashEraseError();
+        _samba.fail();
 }
 
 void

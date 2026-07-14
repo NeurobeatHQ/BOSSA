@@ -32,20 +32,13 @@
 
 #include <string>
 #include <stdint.h>
-#include <exception>
 #include <memory>
 
 #include "SerialPort.h"
 
-class SambaError : public std::exception
-{
-public:
-    SambaError() : exception() {};
-    const char* what() const throw() { return "SAM-BA operation failed"; }
-};
-
-
-
+// Errors are reported through a sticky fail flag instead of exceptions so
+// the library builds with -fno-exceptions.  Once failed() is true, all
+// operations become no-ops; check the flag at the API boundary.
 class Samba
 {
 public:
@@ -63,6 +56,9 @@ public:
 
     void setDebug(bool debug) { _debug = debug; }
 
+    bool failed() const { return _failed; }
+    void fail() { _failed = true; }
+
     // Extended SAM-BA functions
     bool canChipErase() { return _canChipErase; }
     void chipErase(uint32_t start_addr);
@@ -79,6 +75,7 @@ private:
     bool _canWriteBuffer;
     bool _canIdentifyChip;
     bool _debug;
+    bool _failed;
     SerialPort::Ptr _port;
 
     bool init();

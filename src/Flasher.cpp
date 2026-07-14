@@ -27,25 +27,26 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 #include <string>
-#include <exception>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <errno.h>
 
 #include "Flasher.h"
 
 using namespace std;
 
-void
+bool
 Flasher::erase(uint32_t foffset)
 {
     _observer.onStatus("Erase flash\n");
     _flash->eraseAll(foffset);
     _flash->eraseAuto(false);
+    return !_samba.failed();
 }
 
-void
+bool
 Flasher::write(const char* filename, uint32_t foffset)
 {
     FILE* infile;
@@ -55,27 +56,33 @@ Flasher::write(const char* filename, uint32_t foffset)
     size_t fbytes;
 
     if (foffset % pageSize != 0 || foffset >= _flash->totalSize())
-        throw FlashOffsetError();
+        return false;
 
     // Only the extended write-buffer transfer is supported; the
     // page-by-page applet fallback was removed.
     if (!_samba.canWriteBuffer())
-        throw FlashOffsetError();
+        return false;
 
     infile = fopen(filename, "rb");
     if (!infile)
-        throw FileOpenError(errno);
+        return false;
 
-    try
+    if (true)
     {
         if (fseek(infile, 0, SEEK_END) != 0 || (fsize = ftell(infile)) < 0)
-            throw FileIoError(errno);
+        {
+            fclose(infile);
+            return false;
+        }
 
         rewind(infile);
 
         numPages = (fsize + pageSize - 1) / pageSize;
         if (numPages > _flash->numPages())
-            throw FileSizeError();
+        {
+            fclose(infile);
+            return false;
+        }
 
         _observer.onStatus("Write %ld bytes to flash (%u pages)\n", fsize, numPages);
 
@@ -96,14 +103,16 @@ Flasher::write(const char* filename, uint32_t foffset)
             _flash->loadBuffer(buffer, fbytes);
             _flash->writeBuffer(foffset + offset, fbytes);
             offset += fbytes;
+
+            if (_samba.failed())
+                break;
         }
-    }
-    catch(...)
-    {
-        fclose(infile);
-        throw;
     }
 
     fclose(infile);
+    if (_samba.failed())
+        return false;
+
     _observer.onProgress(numPages, numPages);
+    return true;
 }

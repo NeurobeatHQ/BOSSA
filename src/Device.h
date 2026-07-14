@@ -29,17 +29,8 @@
 #ifndef _DEVICE_H
 #define _DEVICE_H
 
-#include <exception>
-
 #include "Samba.h"
 #include "Flash.h"
-
-class DeviceUnsupportedError : public std::exception
-{
-public:
-    DeviceUnsupportedError() : exception() {};
-    const char* what() const throw() { return "Device unsupported"; }
-};
 
 class Device
 {
@@ -53,7 +44,7 @@ public:
     Device(Samba& samba) : _samba(samba), _flash(nullptr), _family(FAMILY_NONE) {}
     virtual ~Device() {}
 
-    void create();
+    bool create();
 
     Family getFamily() { return _family; }
 
