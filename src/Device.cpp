@@ -27,10 +27,12 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 #include "Device.h"
+#ifndef ARDUINO
 #include "EfcFlash.h"
 #include "EefcFlash.h"
 #include "D2xNvmFlash.h"
 #include "D5xNvmFlash.h"
+#endif
 #include "NullFlash.h"
 
 void
@@ -66,6 +68,7 @@ Device::create()
         return;
     }
 
+#ifndef ARDUINO
     // Device identification must be performed carefully to avoid reading from
     // addresses that devices do not support which will lock up the CPU
 
@@ -646,6 +649,12 @@ Device::create()
     }
 
     _flash = std::unique_ptr<Flash>(flashPtr);
+#else
+    // Arduino builds only support bootloaders with chip identification
+    // (see above); the SAM chip-ID probing and the SAM flash drivers
+    // live in unused/.
+    throw DeviceUnsupportedError();
+#endif
 }
 
 void

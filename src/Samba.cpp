@@ -36,11 +36,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-#ifdef ARDUINO
-#include <Arduino_DebugUtils.h>
-#define printf DEBUG_DEBUG
-#endif
-
 using namespace std;
 
 // XMODEM definitions
