@@ -47,37 +47,6 @@ public:
     enum Family {
         FAMILY_NONE,
 
-        FAMILY_SAM7S,
-        FAMILY_SAM7SE,
-        FAMILY_SAM7X,
-        FAMILY_SAM7XC,
-        FAMILY_SAM7L,
-
-        FAMILY_SAM3N,
-        FAMILY_SAM3S,
-        FAMILY_SAM3U,
-        FAMILY_SAM3X,
-        FAMILY_SAM3A,
-
-        FAMILY_SAM4S,
-        FAMILY_SAM4E,
-
-        FAMILY_SAM9XE,
-
-        FAMILY_SAMD21,
-        FAMILY_SAMR21,
-        FAMILY_SAML21,
-
-        FAMILY_SAMD51,
-        FAMILY_SAME51,
-        FAMILY_SAME53,
-        FAMILY_SAME54,
-
-        FAMILY_SAME70,
-        FAMILY_SAMS70,
-        FAMILY_SAMV70,
-        FAMILY_SAMV71,
-
         FAMILY_NRF52,
     };
 
@@ -92,15 +61,10 @@ public:
 
     FlashPtr& getFlash() { return _flash; }
 
-    void reset();
-
 private:
     Samba& _samba;
     std::unique_ptr<Flash> _flash;
     Family _family;
-
-    void readChipId(uint32_t& chipId, uint32_t& extChipId);
 };
 
 #endif // _DEVICE_H
-

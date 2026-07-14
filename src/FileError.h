@@ -74,16 +74,6 @@ private:
     int _errnum;
 };
 
-class FileShortError : public FileError
-{
-public:
-    FileShortError() : FileError() {};
-    const char* what() const throw()
-    {
-        return "Operation ended with a short write";
-    }
-};
-
 class FileSizeError : public FileError
 {
 public:

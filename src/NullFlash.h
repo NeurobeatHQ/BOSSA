@@ -21,7 +21,6 @@
 #define _NULLFLASH_H
 
 #include <stdint.h>
-#include <exception>
 
 #include "Flash.h"
 
@@ -40,30 +39,6 @@ public:
 
     void eraseAll(uint32_t offset);
     void eraseAuto(bool enable);
-
-    std::vector<bool> getLockRegions();
-
-    bool getSecurity();
-
-    bool getBod();
-    bool canBod() { return false; }
-
-    bool getBor();
-    bool canBor() { return false; }
-
-    bool getBootFlash();
-    bool canBootFlash() { return false; }
-
-    void writeOptions();
-
-    void writePage(uint32_t page);
-    void readPage(uint32_t page, uint8_t* data);
-
-    void writeBuffer(uint32_t dst_addr, uint32_t size);
-
-protected:
-    bool     _eraseAuto;
-    void erase(uint32_t offset, uint32_t size);
 };
 
 #endif // _NULLFLASH_H

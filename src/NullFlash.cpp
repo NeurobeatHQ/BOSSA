@@ -27,7 +27,7 @@ NullFlash::NullFlash(
     uint32_t user,
     uint32_t stack)
     :
-    Flash(samba, name, 0, pages, size, 1, 0, user, stack)
+    Flash(samba, name, 0, pages, size, user, stack)
 {
 }
 
@@ -36,92 +36,20 @@ NullFlash::~NullFlash()
 }
 
 void
-NullFlash::erase(uint32_t offset, uint32_t size)
-{
-    throw FlashEraseError();
-}
-
-void
 NullFlash::eraseAll(uint32_t offset)
 {
-    // Use the extended Samba command if available
+    // Only the extended Samba chip-erase command is supported; the
+    // page-by-page erase fallback was removed with the applet run path.
     if (_samba.canChipErase())
-    {
         _samba.chipErase(offset);
-    }
     else
-    {
-        erase(offset, totalSize() - offset);
-    }
+        throw FlashEraseError();
 }
 
 void
 NullFlash::eraseAuto(bool enable)
 {
-    _eraseAuto = enable;
-}
-
-std::vector<bool>
-NullFlash::getLockRegions()
-{
-    std::vector<bool> regions(0);
-    return regions;
-}
-
-bool
-NullFlash::getSecurity()
-{
-    return false;
-}
-
-bool
-NullFlash::getBod()
-{
-    return false;
-}
-
-bool
-NullFlash::getBor()
-{
-    return false;
-}
-
-bool
-NullFlash::getBootFlash()
-{
-    return true;
-}
-
-void
-NullFlash::writeOptions()
-{
-    return;
-}
-
-void
-NullFlash::writePage(uint32_t page)
-{
-    throw FlashPageError();
-}
-
-void
-NullFlash::readPage(uint32_t page, uint8_t* buf)
-{
-    if (page >= _pages)
-    {
-        throw FlashPageError();
-    }
-
-    _samba.read(_addr + (page * _size), buf, _size);
-}
-
-void
-NullFlash::writeBuffer(uint32_t dst_addr, uint32_t size)
-{
-    // Auto-erase if enabled
-    if (_eraseAuto)
-        erase(dst_addr, size);
-
-    // Call the base class method
-    Flash::writeBuffer(dst_addr, size);
+    // Auto-erase has no effect: the whole chip is erased up front and
+    // the page-erase path no longer exists.
+    (void) enable;
 }

@@ -55,24 +55,13 @@ public:
     bool connect(SerialPort::Ptr port, int bps = 115200);
     void disconnect();
 
-    void writeByte(uint32_t addr, uint8_t value);
-    uint8_t readByte(uint32_t addr);
-
     void writeWord(uint32_t addr, uint32_t value);
-    uint32_t readWord(uint32_t addr);
 
     void write(uint32_t addr, const uint8_t* buffer, int size);
-    void read(uint32_t addr, uint8_t* buffer, int size);
-
-    void go(uint32_t addr);
 
     std::string version();
 
-    void chipId(uint32_t& chipId, uint32_t& extChipId);
-
     void setDebug(bool debug) { _debug = debug; }
-
-    const SerialPort& getSerialPort() { return *_port; }
 
     // Extended SAM-BA functions
     bool canChipErase() { return _canChipErase; }
@@ -81,40 +70,21 @@ public:
     bool canWriteBuffer() { return _canWriteBuffer; }
     void writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size);
     uint32_t writeBufferSize() { return 4096; }
-    
-    bool canChecksumBuffer() { return _canChecksumBuffer; }
-    uint16_t checksumBuffer(uint32_t start_addr, uint32_t size);
-    uint32_t checksumBufferSize() { return 4096; }
-    uint16_t checksumCalc(uint8_t c, uint16_t crc);
 
     bool canIdentifyChip() { return _canIdentifyChip; }
     std::string identifyChip();
 
-    bool canReset() { return _canReset; }
-    void reset();
-
 private:
     bool _canChipErase;
     bool _canWriteBuffer;
-    bool _canChecksumBuffer;
     bool _canIdentifyChip;
-    bool _canReset;
-    int _readBufferSize;
     bool _debug;
-    bool _isUsb;
     SerialPort::Ptr _port;
 
     bool init();
 
-    uint16_t crc16Calc(const uint8_t *data, int len);
-    bool crc16Check(const uint8_t *blk);
-    void crc16Add(uint8_t *blk);
-    void writeXmodem(const uint8_t* buffer, int size);
-    void readXmodem(uint8_t* buffer, int size);
-
     void writeBinary(const uint8_t* buffer, int size);
-    void readBinary(uint8_t* buffer, int size);
-
+    std::string readPrintable();
 };
 
 

@@ -44,18 +44,6 @@ WordCopyApplet::~WordCopyApplet()
 }
 
 void
-WordCopyApplet::setDstAddr(uint32_t dstAddr)
-{
-    _samba.writeWord(_addr + applet.dst_addr, dstAddr);
-}
-
-void
-WordCopyApplet::setSrcAddr(uint32_t srcAddr)
-{
-    _samba.writeWord(_addr + applet.src_addr, srcAddr);
-}
-
-void
 WordCopyApplet::setWords(uint32_t words)
 {
     _samba.writeWord(_addr + applet.words, words);

@@ -50,9 +50,6 @@ public:
 
     virtual void setStack(uint32_t stack);
 
-    virtual void run(); // To be used for Thumb-1 based devices (ARM7TDMI, ARM9)
-    virtual void runv(); // To be used for Thumb-2 based devices (Cortex-Mx)
-
 protected:
     Samba& _samba;
     uint32_t _addr; // Address in device SRAM where will be placed the applet

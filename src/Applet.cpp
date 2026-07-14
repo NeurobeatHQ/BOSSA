@@ -45,20 +45,3 @@ Applet::setStack(uint32_t stack)
 {
     _samba.writeWord(_stack, stack);
 }
-
-void
-Applet::run()
-{
-    // Add one to the start address for Thumb mode
-    _samba.go(_start + 1);
-}
-
-void
-Applet::runv()
-{
-    // Add one to the start address for Thumb mode
-    _samba.writeWord(_reset, _start + 1);
-
-    // The stack is the first reset vector
-    _samba.go(_stack);
-}

@@ -35,16 +35,13 @@ Flash::Flash(Samba& samba,
              uint32_t addr,
              uint32_t pages,
              uint32_t size,
-             uint32_t planes,
-             uint32_t lockRegions,
              uint32_t user,
              uint32_t stack)
     : _samba(samba), _name(name), _addr(addr), _pages(pages), _size(size),
-      _planes(planes), _lockRegions(lockRegions), _user(user), _wordCopy(samba, user)
+      _user(user), _wordCopy(samba, user)
 {
     assert((size & (size - 1)) == 0);
     assert((pages & (pages - 1)) == 0);
-    assert((lockRegions & (lockRegions - 1)) == 0);
 
     _wordCopy.setWords(size / sizeof(uint32_t));
     _wordCopy.setStack(stack);
@@ -54,42 +51,6 @@ Flash::Flash(Samba& samba,
     // page buffers will have the size of a physical page and will be situated right after the applet
     _pageBufferA = ((_user + _wordCopy.size() + 3) / 4) * 4; // we need to avoid non 32bits aligned access on Cortex-M0+
     _pageBufferB = _pageBufferA + size;
-}
-
-void
-Flash::setLockRegions(const std::vector<bool>& regions)
-{
-    if (regions.size() > _lockRegions)
-        throw FlashRegionError();
-
-    _regions.set(regions);
-}
-
-void
-Flash::setSecurity()
-{
-    _security.set(true);
-}
-
-void
-Flash::setBor(bool enable)
-{
-    if (canBor())
-        _bor.set(enable);
-}
-
-void
-Flash::setBod(bool enable)
-{
-    if (canBod())
-        _bod.set(enable);
-}
-
-void
-Flash::setBootFlash(bool enable)
-{
-    if (canBootFlash())
-        _bootFlash.set(enable);
 }
 
 void
@@ -103,4 +64,3 @@ Flash::writeBuffer(uint32_t dst_addr, uint32_t size)
 {
     _samba.writeBuffer(_onBufferA ? _pageBufferA : _pageBufferB, dst_addr + _addr, size);
 }
-
