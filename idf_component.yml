@@ -1,0 +1,3 @@
+version: "0.0.1"
+description: "SAM-BA flash programmer core (nRF52840 / UNO R4 WiFi path), platform-neutral C++"
+url: "https://github.com/NeurobeatHQ/BOSSA"
