@@ -27,6 +27,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 #include <string>
+#include <memory>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,7 +89,11 @@ Flasher::write(const char* filename, uint32_t foffset)
 
         uint32_t offset = 0;
         uint32_t bufferSize = _samba.writeBufferSize();
-        uint8_t buffer[bufferSize];
+        // Heap, not stack: writeBufferSize() is 4 KB — larger than some hosts'
+        // task stacks (e.g. the ESP-IDF main task at 3584 B), where a stack VLA
+        // here overflows. unique_ptr frees it on every return path.
+        std::unique_ptr<uint8_t[]> bufmem(new uint8_t[bufferSize]);
+        uint8_t* buffer = bufmem.get();
 
         while ((fbytes = fread(buffer, 1, bufferSize, infile)) > 0)
         {
